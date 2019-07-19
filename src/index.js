@@ -1,5 +1,7 @@
 import http from 'http';
+import https from 'https';
 import express from 'express';
+import fs from 'fs';
 import cors from 'cors';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
@@ -11,6 +13,20 @@ import config from './config.json';
 
 let app = express();
 app.server = http.createServer(app);
+
+try {
+  const CREDENTIAL_PATH = '/etc/letsencrypt/live/swmlegato.tk/';
+  const credentials = {
+    key: fs.readFileSync(CREDENTIAL_PATH + 'privkey.pem', 'utf8'),
+    cert: fs.readFileSync(CREDENTIAL_PATH + 'cert.pem', 'utf8'),
+    ca: fs.readFileSync(CREDENTIAL_PATH + 'chain.pem', 'utf8'),
+  };
+  app.secureServer = https.createServer(credentials, app);
+} catch (err) {
+  if (err.code === 'ENOENT') {
+    console.log("SSL Certificicate doesn't exist. Only HTTP server is running.");
+  } else throw err;
+}
 
 // logger
 app.use(morgan('dev'));
@@ -38,7 +54,11 @@ initializeDb( db => {
 
 	app.server.listen(process.env.PORT || config.port, () => {
 		console.log(`Started on port ${app.server.address().port}`);
-	});
+  });
+  
+  if (app.secureServer) {
+    app.secureServer.listen(443);
+  }
 });
 
 export default app;
