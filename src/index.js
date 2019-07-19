@@ -5,11 +5,12 @@ import fs from 'fs';
 import cors from 'cors';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
+
+import config from './config';
 import initializeDb from './db';
 import middleware from './middleware';
 import api from './api';
 import facebook from './facebook';
-import config from './config.json';
 
 let app = express();
 app.server = http.createServer(app);
