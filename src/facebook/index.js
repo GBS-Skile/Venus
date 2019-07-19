@@ -30,6 +30,8 @@ export default ({ config, db }) => {
         } else {
           res.sendStatus(403);
         }
+      } else {
+        res.sendStatus(400);
       }
     });
 
