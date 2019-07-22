@@ -1,4 +1,5 @@
 import sessions from '../models/sessions'
+import * as dialogflow from '../dialogflow'
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -6,7 +7,10 @@ const getWaitingTime = content => 5000;
 
 const getTypingTime = content => 2000;
 
-const getResponse = content => content;
+async function getResponse(senderId, content) {
+  return await dialogflow.request(senderId, content);
+  //return content;
+}
 
 export async function request({ platform, senderId, content }, { read, typing, reply }) {
   const session = sessions.get(platform, senderId, true);
@@ -22,7 +26,7 @@ export async function request({ platform, senderId, content }, { read, typing, r
 
   if (!origMessage.interrupted) {  // reply
     origMessage.interrupted = true;
-    let response = getResponse(origMessage.content);
+    const response = await getResponse(senderId, origMessage.content);
 
     if (typing) typing();
     await sleep(getTypingTime(response));

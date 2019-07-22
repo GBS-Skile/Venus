@@ -25,6 +25,7 @@ const callAPI = (senderId, options, callback) => {
 const send = (senderId, response) => {
   callAPI(senderId, { "message": response }, (err, res, body) => {
     if (!err) {
+      console.log(body);
       console.log('message sent!');
     } else {
       console.error('Unable to send message: ' + err);
@@ -51,7 +52,12 @@ const handleMessage = (senderId, msg) => {
     }, {
       read: () => senderAction(senderId, "mark_seen"),
       typing: () => senderAction(senderId, "typing_on"),
-      reply: (response) => send(senderId, { text: response }),
+      reply: (response) => {
+        console.log(response);
+        
+        send(senderId, { text: response });
+        senderAction(senderId, "typing_off");
+      },
     });
   }
 }
