@@ -1,22 +1,34 @@
 import sessions from '../models/sessions'
 
-export const request = ({ platform, senderId, content }, { read, reply }) => {
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+const getWaitingTime = content => 5000;
+
+const getTypingTime = content => 2000;
+
+const getResponse = content => content;
+
+export async function request({ platform, senderId, content }, { read, typing, reply }) {
   const session = sessions.get(platform, senderId, true);
-  const msg = session.pushMessage();
+  const origMessage = session.pushMessage(content);
 
   if (read) read();
-  msg.response = 'salt@' + content + '@sauce';
+  origMessage.content = [
+    ...session.interruptBefore(origMessage).map(m => m.content),
+    content,
+  ].join(' ');
 
-  session.interruptBefore(msg).forEach(
-    m => msg.response = m.response + '\n' + msg.response
-  );
+  await sleep(getWaitingTime(origMessage.content));
 
-  setTimeout(() => {
-    if (!msg.interrupted) {
-      msg.interrupted = true;
-      reply(msg.response);
-    } else console.log('interrupted');
+  if (!origMessage.interrupted) {  // reply
+    origMessage.interrupted = true;
+    let response = getResponse(origMessage.content);
 
-    msg.pop();
-  }, 5000);
+    if (typing) typing();
+    await sleep(getTypingTime(response));
+
+    reply(response);
+  }
+
+  origMessage.pop();
 };

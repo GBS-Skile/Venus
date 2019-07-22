@@ -49,7 +49,8 @@ const handleMessage = (senderId, msg) => {
       senderId,
       content: msg.text,
     }, {
-      read: () => senderAction(senderId, "typing_on"),
+      read: () => senderAction(senderId, "mark_seen"),
+      typing: () => senderAction(senderId, "typing_on"),
       reply: (response) => send(senderId, { text: response }),
     });
   }

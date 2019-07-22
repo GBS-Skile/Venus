@@ -10,11 +10,12 @@ class Session {
     }
   }
 
-  pushMessage() {
+  pushMessage(content) {
     const { messages } = this;
     const idx = (messages.count += 1);
     const msg = {
       idx,
+      content,
       interrupted: false,
       pop() {
         const _idx = messages.queue.findIndex(m => m.idx === idx);
