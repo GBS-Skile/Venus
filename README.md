@@ -1,5 +1,6 @@
 # Leagto Backend Project : Venus
 
+<<<<<<< HEAD
 > A backend server for sensibility-oriented chatbot based on Express and DialogFlow for Korean
 
 **고민이나 스트레스로 괴로운 사람들이 속 시원히 털어놓을 수 있는 챗봇 서비스**의
@@ -32,6 +33,9 @@ Venus는 NodeJS 기반의 [Express 프레임워크](https://expressjs.com/ko/)�
 ## Installing
 
 [KoalaNLP](https://github.com/koalanlp/koalanlp) 모듈을 사용하려면 Java 8 이상이 필요합니다.
+=======
+A backend server for sensibility-oriented chatbot based on Express and DialogFlow
+>>>>>>> parent of 4cbfee0... Install KoalaNLP
 
 ## Open Source LICENSE
 
