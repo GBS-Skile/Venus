@@ -1,3 +1,4 @@
+import 'babel-polyfill';
 import http from 'http';
 import https from 'https';
 import express from 'express';
@@ -11,12 +12,13 @@ import initializeDb from './db';
 import middleware from './middleware';
 import api from './api';
 import facebook from './facebook';
+import kakao from './kakao';
 
 let app = express();
 app.server = http.createServer(app);
 
 try {
-  const CREDENTIAL_PATH = '/etc/letsencrypt/live/swmlegato.tk/';
+  const CREDENTIAL_PATH = process.env.CREDENTIAL_PATH || '/etc/letsencrypt/live/swmlegato.tk/';
   const credentials = {
     key: fs.readFileSync(CREDENTIAL_PATH + 'privkey.pem', 'utf8'),
     cert: fs.readFileSync(CREDENTIAL_PATH + 'cert.pem', 'utf8'),
@@ -51,7 +53,8 @@ initializeDb( db => {
 	app.use('/api', api({ config, db }));
 
 	// chatbot platform
-	app.use('/facebook', facebook({ config, db }));
+  app.use('/facebook', facebook({ config, db }));
+  app.use('/kakao', kakao());
 
 	app.server.listen(process.env.PORT || config.port, () => {
 		console.log(`Started on port ${app.server.address().port}`);
