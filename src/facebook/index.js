@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import fetch from 'request';
 
-import { request } from '../chat';
+import { PlatformUser } from '../models';
+import { request, onUtter } from '../chat';
 
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 if (!PAGE_ACCESS_TOKEN) {
@@ -43,8 +44,19 @@ const senderAction = (senderId, type) => {
   });
 }
 
-const handleMessage = (senderId, msg) => {
+const handleMessage = async function (senderId, msg) {
   if (msg.text) {
+    const platformUser = await PlatformUser.findOneAndUpdate(
+      {
+        platform: "facebook",
+        socialId: senderId,
+      },
+      { },
+      { upsert: true, new: true }
+    );
+
+    console.log(await onUtter(platformUser, msg.text));
+
     request({
       platform: "facebook",
       senderId,
