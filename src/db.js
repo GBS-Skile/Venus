@@ -1,4 +1,8 @@
+import mongoose from 'mongoose';
+
 export default callback => {
-	// connect to a database if needed, then pass it to `callback`:
-	callback();
+  mongoose.connect(process.env.MONGO_URI || "mongodb://localhost/venus");
+  
+  let db = mongoose.connection;
+  callback(db);
 }
