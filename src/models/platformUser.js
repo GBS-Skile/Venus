@@ -6,6 +6,14 @@ const platformUserSchema = new Schema({
   socialId: String,
 });
 
+platformUserSchema.statics.findOrCreate = function (platform, socialId) {
+  return this.findOneAndUpdate(
+    { platform, socialId },
+    { },
+    { upsert: true, new: true }
+  );
+}
+
 const PlatformUser = model('PlatformUser', platformUserSchema);
 
 export default PlatformUser;

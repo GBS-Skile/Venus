@@ -17,9 +17,10 @@ async function getResponse(senderId, content) {
 }
 
 /**
- * Utterance 객체를 생성하고 타이밍 파악 모듈로 넘겨줍니다.
+ * Utterance 객체를 생성하고 Queue 모듈에 보내 그 반응을 처리합니다.
  * @param {PlatformUser} platformUser 
  * @param {string} text 
+ * @return EventEmitter를 인자로 보내는 Promise
  */
 export function onUtter(platformUser, text) {
   return Dialogue.findByPlatformUser(platformUser).then(
@@ -32,32 +33,3 @@ export function onUtter(platformUser, text) {
     utterance => MessageQueueMap.get(platformUser._id.toString()).push(utterance)
   );
 }
-
-export async function request({ platform, senderId, content }, { read, typing, reply } = {}) {
-  const session = sessions.get(platform, senderId, true);
-  const origMessage = session.pushMessage(content);
-
-  if (read) read();
-  origMessage.content = [
-    ...session.interruptBefore(origMessage).map(m => m.content),
-    content,
-  ].join(' ');
-
-  await sleep(getWaitingTime(origMessage.content));
-  let response = null;
-
-  if (!origMessage.interrupted) {  // reply
-    origMessage.interrupted = true;
-    response = await getResponse(senderId, origMessage.content);
-
-    if (typing) {
-      typing();
-      await sleep(getTypingTime(response));
-    }
-
-    if (reply) reply(response);
-  }
-
-  origMessage.pop();
-  return response;
-};

@@ -1,4 +1,7 @@
+import { EventEmitter } from 'events';
+
 import { Queue } from '../lib/util';
+import { sendToThoth } from './thoth';
 
 /**
  * 참고 1 : JavaScript에서 Python 호출하기
@@ -16,19 +19,27 @@ const getWaitingTime = utterance => 3000;  // 미구현 (참고 1)
 class MessageQueue {
   constructor() {
     this.pending = [];
-    console.log("MessageQueue created");
   }
 
   push(utterance) {
+    const queue = this;
     const { pending } = this;
     
     pending.push(utterance);
-    setTimeout(() => {
-      if (pending.indexOf(utterance) != -1) { // 발화 여부 파악 (예시)
-        // sendThoth(pending, callback)
-        pending = [];
-      }
-    }, getWaitingTime(utterance));
+    return new Promise((resolve, reject) => {
+      const evtEmitter = new EventEmitter();
+      resolve(evtEmitter);
+
+      setTimeout(function () {
+        evtEmitter.emit('typing');
+        if (pending[pending.length - 1] === utterance) {
+          sendToThoth(pending).then(response => evtEmitter.emit('response', response));
+          queue.pending = [];  // clear Queue
+        } else {
+          evtEmitter.emit('cancel');
+        }
+      }, getWaitingTime(utterance)); // 발화 여부 파악 (예시)
+    });
   }
 }
 
