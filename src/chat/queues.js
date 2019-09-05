@@ -33,7 +33,16 @@ class MessageQueue {
       setTimeout(function () {
         evtEmitter.emit('typing');
         if (pending[pending.length - 1] === utterance) {
-          sendToThoth(pending).then(response => evtEmitter.emit('response', response));
+          sendToThoth(pending).then(
+            response => {
+              evtEmitter.emit('response', response.msg);
+            }
+          ).catch(
+            () => evtEmitter.emit(
+              'response',
+              "죄송해요. 말씀을 이해하지 못 했어요."
+            )
+          );
           queue.pending = [];  // clear Queue
         } else {
           evtEmitter.emit('cancel');
