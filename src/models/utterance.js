@@ -1,7 +1,10 @@
 import { model, Schema } from 'mongoose';
 
 const utteranceSchema = new Schema({
-  dialogue: Schema.Types.ObjectId,
+  dialogue: {
+    type: Schema.Types.ObjectId,
+    ref: 'Dialogue',
+  },
   isSpeakerBot: Boolean,
   createdAt: { type: Date, default: Date.now },
   text: String,

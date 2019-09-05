@@ -1,23 +1,26 @@
-import { EventEmitter } from 'events';
+import { spawn } from 'child_process';
 
-import { Queue } from '../lib/util';
+import { EventEmitter } from 'events';
 import { sendToThoth } from './thoth';
 
-/**
- * 참고 1 : JavaScript에서 Python 호출하기
- * https://stackoverflow.com/questions/23450534/how-to-call-a-python-function-from-node-js
- */
 
-/**
- * 참고 2 : 카카오 i Open Builder에 Response 보내는 방법 고민해보기
- */
+const getWaitingTime = function(utterances) {
+  const utterance = utterances[utterances.length - 1];
+  return new Promise((resolve, reject) => {
+    spawn('python3', ['scripts/turn_taking.py', utterance.text])
+      .stdout.on('data', resolve);
+  }).then(data => {
+    return data === "True" ? 1000 : 2000;
+  });
+};
 
-const getWaitingTime = utterance => 3000;  // 미구현 (참고 1)
-
-// 원래 있는 Session 사용해서 문제 재구성하기
+const packContext = utterance => ({
+  state: utterance.dialogue.state,
+});
 
 class MessageQueue {
-  constructor() {
+  constructor(platformUser) {
+    this.platformUser = platformUser;
     this.pending = [];
   }
 
@@ -26,16 +29,17 @@ class MessageQueue {
     const { pending } = this;
     
     pending.push(utterance);
-    return new Promise((resolve, reject) => {
+    return getWaitingTime(pending).then(waitingTime => {
       const evtEmitter = new EventEmitter();
-      resolve(evtEmitter);
-
       setTimeout(function () {
         evtEmitter.emit('typing');
         if (pending[pending.length - 1] === utterance) {
-          sendToThoth(pending).then(
+          sendToThoth(pending, packContext(utterance)).then(
             response => {
               evtEmitter.emit('response', response.msg);
+              
+              utterance.dialogue.state = response.context.state;
+              utterance.dialogue.save();
             }
           ).catch(
             () => evtEmitter.emit(
@@ -47,7 +51,9 @@ class MessageQueue {
         } else {
           evtEmitter.emit('cancel');
         }
-      }, getWaitingTime(utterance)); // 발화 여부 파악 (예시)
+      }, waitingTime);
+
+      return evtEmitter;
     });
   }
 }
@@ -57,11 +63,12 @@ class MessageQueueMap {
     this._map = new Map();
   }
 
-  get(key) {
+  get(platformUser) {
+    const key = platformUser._id.toString();
     if (this._map.has(key)) {
       return this._map.get(key);
     } else {
-      const defaultValue = new MessageQueue();
+      const defaultValue = new MessageQueue(platformUser);
       this._map.set(key, defaultValue);
       return defaultValue;
     }

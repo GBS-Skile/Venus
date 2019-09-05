@@ -30,6 +30,8 @@ export function onUtter(platformUser, text) {
       text: text,
     })
   ).then(
-    utterance => MessageQueueMap.get(platformUser._id.toString()).push(utterance)
+    utterance => utterance.populate('dialogue').execPopulate()
+  ).then(
+    utterance => MessageQueueMap.get(platformUser).push(utterance)
   );
 }
