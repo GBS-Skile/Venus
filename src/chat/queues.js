@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 
 import { EventEmitter } from 'events';
-import { sendToThoth } from './thoth';
+import { sendToThoth, sendToDialogflow } from './thoth';
 
 
 const getWaitingTime = function(utterances) {
@@ -14,19 +14,24 @@ const getWaitingTime = function(utterances) {
   });
 };
 
-const packContext = utterance => ({
-  state: utterance.dialogue.state,
-});
 
 class MessageQueue {
   constructor(platformUser) {
     this.platformUser = platformUser;
     this.pending = [];
   }
+  
+  packContext(utterance) {
+    return {
+      socialId: this.platformUser.socialId,
+      state: utterance.dialogue.state,
+    };
+  }
 
   push(utterance) {
     const queue = this;
-    const { pending } = this;
+    const { pending, platformUser } = this;
+    const context = this.packContext(utterance);
     
     pending.push(utterance);
     return getWaitingTime(pending).then(waitingTime => {
@@ -34,19 +39,22 @@ class MessageQueue {
       setTimeout(function () {
         evtEmitter.emit('typing');
         if (pending[pending.length - 1] === utterance) {
-          sendToThoth(pending, packContext(utterance)).then(
+          sendToDialogflow(pending, context).then(
+          // sendToThoth(pending, context).then(
             response => {
               evtEmitter.emit('response', response.msg);
+              console.log(`${utterance.dialogue.state} >> ${response.context.state}`);
               
               utterance.dialogue.state = response.context.state;
               utterance.dialogue.save();
             }
-          ).catch(
-            () => evtEmitter.emit(
-              'response',
-              "죄송해요. 말씀을 이해하지 못 했어요."
-            )
           );
+          // ).catch(
+          //   () => evtEmitter.emit(
+          //     'response',
+          //     "죄송해요. 말씀을 이해하지 못 했어요."
+          //   )
+          // );
           queue.pending = [];  // clear Queue
         } else {
           evtEmitter.emit('cancel');

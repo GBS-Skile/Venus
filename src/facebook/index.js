@@ -29,6 +29,10 @@ const senderAction = (senderId, type) => callAPI(
   senderId, { "sender_action": type }
 );
 
+const sleep = ms => new Promise((resolve, reject) => setTimeout(resolve, ms));
+
+const MS_PER_CHAR = 50;
+
 const handleMessage = async function (senderId, msg) {
   if (msg.text) {
     PlatformUser.findOrCreate("facebook", senderId).then(
@@ -39,10 +43,12 @@ const handleMessage = async function (senderId, msg) {
     ).then(
       evtEmitter => {
         evtEmitter.on('typing', () => senderAction(senderId, "typing_on"));
-        evtEmitter.on('response', response => {
-          send(senderId, { text: response }).then(
-            () => senderAction(senderId, "typing_off")
-          );
+        evtEmitter.on('response', async function (response) {
+          for(let line of response.split('\n')) {
+            await senderAction(senderId, "typing_on");
+            await sleep(line.length * MS_PER_CHAR);
+            await send(senderId, { text: line });
+          }
         });
         evtEmitter.on('cancel', () => senderAction(senderId, "typing_off"));
       }
