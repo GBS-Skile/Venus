@@ -1,11 +1,14 @@
 import { spawn } from 'child_process';
-
 import { EventEmitter } from 'events';
+
 import { sendToThoth, sendToDialogflow } from './thoth';
+import { Dialogue } from '../models';
 
 
 const LONG_WAIT = 100;  // as ms
 const SHORT_WAIT = 10;  // as ms
+
+const DIALOGUE_GAP_LIMIT = 3 * 60 * 60 * 1000;  // three hours as ms
 
 const getWaitingTime = function(utterances) {
   const utterance = utterances[utterances.length - 1];
@@ -22,6 +25,46 @@ class MessageQueue {
   constructor(platformUser) {
     this.platformUser = platformUser;
     this.pending = [];
+  }
+
+  /**
+   * 발화(Utterance)를 생성할 때 어떤 대화(Dialogue)에 속해있는 지 결정할 필요가 있습니다.
+   * 그 때 호출되는 함수입니다.
+   * @returns {Promise} Dialogue 모델을 반환합니다.
+   */
+  async getDialogue() {
+    if (!this.dialogue) {  // if undefined
+      console.log("load Dialogue");
+      this.dialogue = await Dialogue.findByPlatformUser(this.platformUser);
+    }
+
+    const { dialogue, platformUser } = this;
+    
+    if (dialogue.active) {
+      const hitAt = dialogue.hitAt || Date.now();
+      console.log((Date.now() - hitAt) / 1000);
+      if (Date.now() - hitAt <= DIALOGUE_GAP_LIMIT) {
+        // Dialogue cache hit!
+        dialogue.hitAt = Date.now();
+        return await dialogue.save();
+      } else {
+        // Finish the dialogue and mark at platformUser.context
+        dialogue.active = false;
+        dialogue.finishedAt = Date.now();
+        dialogue.reason = "timeout";
+        await dialogue.save();
+
+        platformUser.context = Object.assign(
+          platformUser.context || {},
+          { SILENCE_AWHILE: true, }
+        );
+        platformUser.markModified('context');
+        await platformUser.save();
+        // do not return dialogue
+      }
+    }
+
+    return this.dialogue = await Dialogue.findByPlatformUser(platformUser);
   }
   
   packContext(utterance) {

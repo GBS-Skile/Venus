@@ -4,6 +4,7 @@ const dialogueSchema = new Schema({
   platformUser: Schema.Types.ObjectId,
   active: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now },
+  hitAt: { type: Date, default: Date.now },
   state: { type: String, default: 'Init' },
   finishedAt: Date,
   finishReason: String,

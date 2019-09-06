@@ -4,6 +4,7 @@ const platformUserSchema = new Schema({
   user: Schema.Types.ObjectId,
   platform: String,
   socialId: String,
+  context: Schema.Types.Mixed,
 });
 
 platformUserSchema.statics.findOrCreate = function (platform, socialId) {

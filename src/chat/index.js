@@ -8,7 +8,8 @@ import { Dialogue, Utterance } from '../models';
  * @return EventEmitter를 인자로 보내는 Promise
  */
 export function onUtter(platformUser, text) {
-  return Dialogue.findByPlatformUser(platformUser).then(
+  const session = MessageQueueMap.get(platformUser);
+  return session.getDialogue().then(
     dialogue => Utterance.create({
       dialogue: dialogue._id,
       isSpeakerBot: false,
@@ -17,6 +18,6 @@ export function onUtter(platformUser, text) {
   ).then(
     utterance => utterance.populate('dialogue').execPopulate()
   ).then(
-    utterance => MessageQueueMap.get(platformUser).push(utterance)
+    utterance => session.push(utterance)
   );
 }
