@@ -6,12 +6,14 @@ import { detectIntent } from '../dialogflow';
 export const sendToDialogflow = (utterances, context) => {
   const content = utterances.map(u => u.text).join(' ');
   return detectIntent(context.socialId, content, context.state).then(
-    queryResult => ({
-      msg: queryResult.fulfillmentMessages.map(m => m.text)
-        .filter(m => m).map(m => m.text.join(' ')).join('\n'),
-      context: {
-        state: queryResult.action || context.state,
-      },
+    ({ fulfillmentMessages, action }) => ({
+      msg: fulfillmentMessages.filter(m => m.text)
+        .map(m => m.text.text.join(' ')).join('\n'),
+      quickReplies: fulfillmentMessages.filter(m => m.payload)
+        .reduce((arr, m) => arr.concat(
+          m.payload.fields.quickReplies.listValue.values.map(v => v.stringValue)
+        ), []),
+      context: { state: action || context.state },
     })
   );
 }

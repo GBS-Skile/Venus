@@ -24,8 +24,18 @@ export default () => {
     ).then(
       evtEmitter => {
         evtEmitter.on('response', response => {
-          res.status(200).send(simpleText(response));
-        })
+          const body = simpleText(response.msg);
+          if (response.quickReplies && response.quickReplies.length) {
+            body.template.quickReplies = response.quickReplies.map(
+              label => ({
+                label,
+                action: 'message',
+                messageText: label,
+              })
+            )
+          }
+          res.status(200).send(body);
+        });
       }
     );
   });

@@ -42,8 +42,7 @@ class MessageQueue {
           sendToDialogflow(pending, context).then(
           // sendToThoth(pending, context).then(
             response => {
-              evtEmitter.emit('response', response.msg);
-              console.log(`${utterance.dialogue.state} >> ${response.context.state}`);
+              evtEmitter.emit('response', response);
               
               utterance.dialogue.state = response.context.state;
               utterance.dialogue.save();
@@ -52,7 +51,7 @@ class MessageQueue {
           // ).catch(
           //   () => evtEmitter.emit(
           //     'response',
-          //     "죄송해요. 말씀을 이해하지 못 했어요."
+          //     { msg: "죄송해요. 말씀을 이해하지 못 했어요." }
           //   )
           // );
           queue.pending = [];  // clear Queue
