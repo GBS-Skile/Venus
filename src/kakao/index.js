@@ -25,8 +25,9 @@ export default () => {
       evtEmitter => {
         evtEmitter.on('response', response => {
           const body = simpleText(response.msg);
-          if (response.quickReplies && response.quickReplies.length) {
-            body.template.quickReplies = response.quickReplies.map(
+          const quickReplies = response.quick_replies;
+          if (quickReplies && response.length) {
+            body.template.quickReplies = quickReplies.map(
               label => ({
                 label,
                 action: 'message',

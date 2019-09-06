@@ -4,13 +4,16 @@ import { EventEmitter } from 'events';
 import { sendToThoth, sendToDialogflow } from './thoth';
 
 
+const LONG_WAIT = 100;  // as ms
+const SHORT_WAIT = 10;  // as ms
+
 const getWaitingTime = function(utterances) {
   const utterance = utterances[utterances.length - 1];
   return new Promise((resolve, reject) => {
     spawn('python3', ['scripts/turn_taking.py', utterance.text])
       .stdout.on('data', resolve);
   }).then(data => {
-    return data === "True" ? 1000 : 2000;
+    return data === "True" ? SHORT_WAIT : LONG_WAIT;
   });
 };
 

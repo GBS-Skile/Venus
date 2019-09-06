@@ -45,9 +45,11 @@ const handleMessage = async function (senderId, msg) {
         evtEmitter.on('typing', () => senderAction(senderId, "typing_on"));
         evtEmitter.on('response', async function (response) {
           const messages = response.msg.split('\n').map(text => ({ text, }));
-          if (response.quickReplies && response.quickReplies.length) {
+          const quickReplies = response.quick_replies;
+          
+          if (quickReplies && quickReplies.length) {
             messages[messages.length - 1].quick_replies =
-              response.quickReplies.map(title => ({
+              quickReplies.map(title => ({
                 content_type: 'text',
                 title,
                 payload: title,

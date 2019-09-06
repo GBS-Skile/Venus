@@ -9,7 +9,7 @@ export const sendToDialogflow = (utterances, context) => {
     ({ fulfillmentMessages, action }) => ({
       msg: fulfillmentMessages.filter(m => m.text)
         .map(m => m.text.text.join(' ')).join('\n'),
-      quickReplies: fulfillmentMessages.filter(m => m.payload)
+      quick_replies: fulfillmentMessages.filter(m => m.payload)
         .reduce((arr, m) => arr.concat(
           m.payload.fields.quickReplies.listValue.values.map(v => v.stringValue)
         ), []),
