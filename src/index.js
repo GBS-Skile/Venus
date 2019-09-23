@@ -43,6 +43,8 @@ app.use(bodyParser.json({
 	limit : config.bodyLimit
 }));
 
+app.use(express.static('public'));
+
 // connect to db
 initializeDb( db => {
 
