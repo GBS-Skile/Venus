@@ -2,7 +2,13 @@ import { Router } from 'express';
 
 import { ActionEnum, PlatformAdapter } from '../chat';
 
-const adapter = new PlatformAdapter('kakao');
+class KakaoPlatformAdapter extends PlatformAdapter {
+  constructor() {
+    super('kakao');
+  }
+}
+
+const adapter = new KakaoPlatformAdapter();
 
 const simpleText = text => ({
   version: "2.0",
@@ -20,14 +26,14 @@ export default () => {
     let utterance = req.body.userRequest.utterance;
     let senderId = req.body.userRequest.user.id;
 
-    const evtEmitter = await adapter.request(
-      senderId, ActionEnum.SEND_TEXT, { text: utterance }
+    const response = await adapter.request(
+      senderId, ActionEnum.SEND_TEXT, { text: utterance.text }
     );
 
-    evtEmitter.on('response', response => {
+    if (response.type !== 'cancelled') {
       const body = simpleText(response.msg);
       const quickReplies = response.quick_replies;
-      console.log(response);
+      
       if (quickReplies && quickReplies.length) {
         body.template.quickReplies = quickReplies.map(
           label => ({
@@ -39,7 +45,7 @@ export default () => {
       }
 
       res.status(200).send(body);
-    });
+    }
   });
 
   return kakao;

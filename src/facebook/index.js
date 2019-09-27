@@ -2,12 +2,14 @@ import { Router } from 'express';
 import fetch from 'node-fetch';
 
 import { PlatformUser } from '../models';
-import { onUtter } from '../chat';
+import { PlatformAdapter, ActionEnum } from '../chat';
 
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 if (!PAGE_ACCESS_TOKEN) {
   console.error('$PAGE_ACCESS_TOKEN not defined.');
 }
+
+const adapter = new PlatformAdapter('facebook');
 
 const callAPI = (senderId, options) => fetch(
   `https://graph.facebook.com/v2.6/me/messages?access_token=${PAGE_ACCESS_TOKEN}`,
@@ -35,35 +37,31 @@ const MS_PER_CHAR = 50;
 
 const handleMessage = async function (senderId, msg) {
   if (msg.text) {
-    PlatformUser.findOrCreate("facebook", senderId).then(
-      platformUser => {
-        senderAction(senderId, "mark_seen");
-        return onUtter(platformUser, msg.text);
-      }
-    ).then(
-      evtEmitter => {
-        evtEmitter.on('typing', () => senderAction(senderId, "typing_on"));
-        evtEmitter.on('response', async function (response) {
-          const messages = response.msg.split('\n').map(text => ({ text, }));
-          const quickReplies = response.quick_replies;
-          
-          if (quickReplies && quickReplies.length) {
-            messages[messages.length - 1].quick_replies =
-              quickReplies.map(title => ({
-                content_type: 'text',
-                title,
-                payload: title,
-              }));
-          }
-          for(let message of messages) {
-            await senderAction(senderId, "typing_on");
-            await sleep(message.text.length * MS_PER_CHAR);
-            await send(senderId, message);
-          }
-        });
-        evtEmitter.on('cancel', () => senderAction(senderId, "typing_off"));
-      }
+    await senderAction(senderId, "mark_seen");
+    const response = await adapter.request(
+      senderId, ActionEnum.SEND_TEXT, { text: msg.text }
     );
+    
+    if (response.msg) {
+      const messages = response.msg.split('\n').map(text => ({ text, }));
+      const quickReplies = response.quick_replies;
+      
+      if (quickReplies && quickReplies.length) {
+        messages[messages.length - 1].quick_replies =
+          quickReplies.map(title => ({
+            content_type: 'text',
+            title,
+            payload: title,
+          }));
+      }
+      for(let message of messages) {
+        await senderAction(senderId, "typing_on");
+        await sleep(message.text.length * MS_PER_CHAR);
+        await send(senderId, message);
+      }
+    } else {
+      await senderAction(senderId, "typing_off");
+    }
   }
 }
 

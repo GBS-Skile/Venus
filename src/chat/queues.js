@@ -81,38 +81,33 @@ class MessageQueue {
     const context = utterance.dialogue.context;
     
     pending.push(utterance);
-    return getWaitingTime(pending).then(waitingTime => {
-      const evtEmitter = new EventEmitter();
-      setTimeout(function () {
-        evtEmitter.emit('typing');
-        if (pending[pending.length - 1] === utterance) {
-          const callThoth = fakeThoth || sendToDialogflow;
-          //const callThoth = sendToThoth;
+    return getWaitingTime(pending).then(waitingTime =>
+      new Promise( // sleep(waitingTime)
+        (resolve, reject) => setTimeout(resolve, waitingTime)
+      )
+    ).then(() => {
+      // Send typing Action
+      if (pending[pending.length - 1] === utterance) {
+        const callThoth = fakeThoth || sendToDialogflow;  // sendToThoth
+        queue.pending = [];  // clear Queue
+        return callThoth(sessionId, pending, context);
+        //const callThoth = sendToThoth;
+      }
 
-          callThoth(sessionId, pending, context).then(
-            response => {
-              evtEmitter.emit('response', response);
-              
-              utterance.dialogue.context = Object.assign(
-                context, response.context
-              );
-              utterance.dialogue.markModified('context');
-              utterance.dialogue.save();
-            }
-          );
-          // ).catch(
-          //   () => evtEmitter.emit(
-          //     'response',
-          //     { msg: "죄송해요. 말씀을 이해하지 못 했어요." }
-          //   )
-          // );
-          queue.pending = [];  // clear Queue
-        } else {
-          evtEmitter.emit('cancel');
+      return null;
+    }).then(response => {
+      if (response) {
+        utterance.dialogue.context = Object.assign(
+          context, response.context
+        );
+        utterance.dialogue.markModified('context');
+        utterance.dialogue.save();
+        return response;
+      } else {
+        return {
+          type: 'cancelled',
         }
-      }, waitingTime);
-
-      return evtEmitter;
+      }
     });
   }
 }
