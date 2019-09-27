@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import { EventEmitter } from 'events';
 
-import { sendToThoth, sendToDialogflow } from './thoth';
+import { sendToThoth, sendToDialogflow, fakeThoth } from './thoth';
 import { Dialogue } from '../models';
 
 
@@ -77,7 +77,8 @@ class MessageQueue {
   push(utterance) {
     const queue = this;
     const { pending, platformUser } = this;
-    const context = this.packContext(utterance);
+    const sessionId = platformUser.socialId;
+    const context = utterance.dialogue.context;
     
     pending.push(utterance);
     return getWaitingTime(pending).then(waitingTime => {
@@ -85,12 +86,17 @@ class MessageQueue {
       setTimeout(function () {
         evtEmitter.emit('typing');
         if (pending[pending.length - 1] === utterance) {
-          sendToDialogflow(pending, context).then(
-          // sendToThoth(pending, context).then(
+          const callThoth = fakeThoth || sendToDialogflow;
+          //const callThoth = sendToThoth;
+
+          callThoth(sessionId, pending, context).then(
             response => {
               evtEmitter.emit('response', response);
               
-              utterance.dialogue.state = response.context.state;
+              utterance.dialogue.context = Object.assign(
+                context, response.context
+              );
+              utterance.dialogue.markModified('context');
               utterance.dialogue.save();
             }
           );

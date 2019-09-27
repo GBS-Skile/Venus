@@ -6,6 +6,7 @@ const dialogueSchema = new Schema({
   createdAt: { type: Date, default: Date.now },
   hitAt: { type: Date, default: Date.now },
   state: { type: String, default: 'Init' },
+  context: { type: Schema.Types.Mixed, default: { state: 'Init' } },
   finishedAt: Date,
   finishReason: String,
 });
