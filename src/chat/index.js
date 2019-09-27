@@ -1,5 +1,31 @@
 import MessageQueueMap from './queues';
-import { Dialogue, Utterance } from '../models';
+import { PlatformUser, Utterance } from '../models';
+
+export const ActionEnum = {
+  WELCOME: 0,
+  SEND_TEXT: 1,
+  SEND_IMAGE: 2,
+  READ: 3,
+  START_TYPING: 4,
+  STOP_TYPING: 5,
+};
+
+export class PlatformAdapter {
+  constructor(platformName) {
+    this.platformName = platformName;
+  }
+
+  async request(userId, action, payload = {}) {
+    const platformUser = await PlatformUser.findOrCreate(this.platformName, userId);
+
+    switch(action) {
+      case ActionEnum.SEND_TEXT:
+        return await onUtter(platformUser, payload.text);
+    }
+
+    return [];
+  }
+};
 
 /**
  * Utterance 객체를 생성하고 Queue 모듈에 보내 그 반응을 처리합니다.
