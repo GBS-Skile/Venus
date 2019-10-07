@@ -5,18 +5,19 @@ const dialogueSchema = new Schema({
   active: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now },
   hitAt: { type: Date, default: Date.now },
-  state: { type: String, default: 'Init' },
-  context: { type: Schema.Types.Mixed, default: { state: 'Init' } },
+  context: { type: Schema.Types.Mixed },
   finishedAt: Date,
   finishReason: String,
 });
 
-dialogueSchema.statics.findByPlatformUser = function (platformUser) {
-  return this.findOneAndUpdate(
-    {
-      platformUser: platformUser._id,
+dialogueSchema.statics.findByPlatformUser = async function (platformUser) {
+  const context = await this.countDocuments({ platformUser: platformUser._id }) < 1
+    ? { state: '최초' }
+    : { state: 'Default' } ;
+  return await this.findOneAndUpdate(
+    { platformUser: platformUser._id,
       active: true,
-    },
+      context, },
     {},
     { setDefaultsOnInsert: true, upsert: true, new: true }
   );

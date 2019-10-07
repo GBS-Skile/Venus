@@ -2,13 +2,16 @@ import { Router } from 'express';
 
 import { ActionEnum, PlatformAdapter } from '../chat';
 
-class KakaoPlatformAdapter extends PlatformAdapter {
-  constructor() {
-    super('kakao');
-  }
-}
+const adapterMap = new Map();
 
-const adapter = new KakaoPlatformAdapter();
+const getAdapter = name => {
+  let adapter = adapterMap.get(name);
+  if (adapter) return adapter;
+
+  adapter = new PlatformAdapter(name);
+  adapterMap.set(name, adapter);
+  return adapter;
+}
 
 const simpleText = text => ({
   version: "2.0",
@@ -26,13 +29,13 @@ export default () => {
     let utterance = req.body.userRequest.utterance;
     let senderId = req.body.userRequest.user.id;
 
-    const response = await adapter.request(
+    const response = await getAdapter(req.body.bot.name).request(
       senderId, ActionEnum.SEND_TEXT, { text: utterance }
     );
 
     if (response.display) {
       const { text, quickReplies } = response.display;
-      const body = simpleText(text);
+      const body = simpleText(text.join('\n'));
       
       if (quickReplies && quickReplies.length) {
         body.template.quickReplies = quickReplies.map(

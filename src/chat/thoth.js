@@ -41,7 +41,7 @@ if (!String.prototype.trim) {
 export async function fakeThoth(sessionId, utterances, context) {
   const msg = utterances.map(u => u.text).join(' ').trim();
   const response = (msg, state, quickReplies = [], context = {}) => ({
-    msg,
+    msg: msg.split('\n'),
     quick_replies: quickReplies,
     context: {
       state,
@@ -50,11 +50,11 @@ export async function fakeThoth(sessionId, utterances, context) {
   });
 
   if (msg === '초기화') {
-    return response('대화 상태를 초기화합니다.', 'Init');
+    return response('대화 상태를 초기화합니다.', 'Default');
   }
 
   switch(context.state) {
-    case 'Init':
+    case 'Default':
       return response(
         '안녕하세요! 전 터리예요.\n사용자님의 이름은 무엇인가요?',
         'AskName', ['김철수']
@@ -89,7 +89,7 @@ export async function fakeThoth(sessionId, utterances, context) {
     default:
       return response(
         '음... 뭔가 이상하네요.\n처음부터 다시 대화를 시작해보죠.',
-        'Init', [msg]
+        'Default', [msg]
       );
   }
 }

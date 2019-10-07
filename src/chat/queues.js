@@ -20,6 +20,14 @@ const getWaitingTime = function(utterances) {
   });
 };
 
+const getThoth = platformUser => {
+  if (platformUser.platform === 'beatrice') {
+    return sendToThoth;
+  } else {
+    return fakeThoth || sendToDialogflow;
+  }
+}
+
 
 class MessageQueue {
   constructor(platformUser) {
@@ -34,7 +42,6 @@ class MessageQueue {
    */
   async getDialogue() {
     if (!this.dialogue) {  // if undefined
-      console.log("load Dialogue");
       this.dialogue = await Dialogue.findByPlatformUser(this.platformUser);
     }
 
@@ -66,13 +73,6 @@ class MessageQueue {
 
     return this.dialogue = await Dialogue.findByPlatformUser(platformUser);
   }
-  
-  packContext(utterance) {
-    return {
-      socialId: this.platformUser.socialId,
-      state: utterance.dialogue.state,
-    };
-  }
 
   push(utterance) {
     const queue = this;
@@ -88,10 +88,8 @@ class MessageQueue {
     ).then(() => {
       // Send typing Action
       if (pending[pending.length - 1] === utterance) {
-        const callThoth = fakeThoth || sendToDialogflow;  // sendToThoth
         queue.pending = [];  // clear Queue
-        return callThoth(sessionId, pending, context);
-        //const callThoth = sendToThoth;
+        return getThoth(platformUser)(sessionId, pending, context);
       }
 
       return null;
