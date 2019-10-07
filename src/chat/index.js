@@ -20,7 +20,15 @@ export class PlatformAdapter {
 
     switch(action) {
       case ActionEnum.SEND_TEXT:
-        return await onUtter(platformUser, payload.text);
+        const response = await onUtter(platformUser, payload.text);
+        return response.msg ?
+          {
+            display: {
+              text: response.msg,
+              quickReplies: response.quick_replies || [],
+            }
+          } :
+          {};
     }
 
     return [];

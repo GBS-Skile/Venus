@@ -104,9 +104,7 @@ class MessageQueue {
         utterance.dialogue.save();
         return response;
       } else {
-        return {
-          type: 'cancelled',
-        }
+        return {}
       }
     });
   }

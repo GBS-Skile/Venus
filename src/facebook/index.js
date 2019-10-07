@@ -42,9 +42,9 @@ const handleMessage = async function (senderId, msg) {
       senderId, ActionEnum.SEND_TEXT, { text: msg.text }
     );
     
-    if (response.msg) {
-      const messages = response.msg.split('\n').map(text => ({ text, }));
-      const quickReplies = response.quick_replies;
+    if (response.display) {
+      const { text, quickReplies } = response.display;
+      const messages = text.split('\n').map(text => ({ text, }));
       
       if (quickReplies && quickReplies.length) {
         messages[messages.length - 1].quick_replies =

@@ -27,12 +27,12 @@ export default () => {
     let senderId = req.body.userRequest.user.id;
 
     const response = await adapter.request(
-      senderId, ActionEnum.SEND_TEXT, { text: utterance.text }
+      senderId, ActionEnum.SEND_TEXT, { text: utterance }
     );
 
-    if (response.type !== 'cancelled') {
-      const body = simpleText(response.msg);
-      const quickReplies = response.quick_replies;
+    if (response.display) {
+      const { text, quickReplies } = response.display;
+      const body = simpleText(text);
       
       if (quickReplies && quickReplies.length) {
         body.template.quickReplies = quickReplies.map(
