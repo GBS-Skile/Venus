@@ -22,6 +22,8 @@ const simpleText = text => ({
   },
 });
 
+const sleep = interval => new Promise((resolve, reject) => setTimeout(resolve, interval));
+
 export default () => {
   let kakao = Router();
 
@@ -36,7 +38,12 @@ export default () => {
     if (response.display) {
       const { text, quickReplies } = response.display;
       const body = simpleText(text.join('\n'));
-      
+
+      const MAX_TYPING_TIME = 4000;
+      const TIME_PER_CHAR = 150;
+      const sleepTime = Math.min(TIME_PER_CHAR * text.join('\n').length, MAX_TYPING_TIME);
+      await sleep(sleepTime);
+
       if (quickReplies && quickReplies.length) {
         body.template.quickReplies = quickReplies.map(
           label => ({

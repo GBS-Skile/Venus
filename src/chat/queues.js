@@ -5,19 +5,10 @@ import { sendToThoth, sendToDialogflow, fakeThoth } from './thoth';
 import { Dialogue } from '../models';
 
 
-const LONG_WAIT = 100;  // as ms
-const SHORT_WAIT = 10;  // as ms
-
 const DIALOGUE_GAP_LIMIT = 3 * 60 * 60 * 1000;  // three hours as ms
 
-const getWaitingTime = function(utterances) {
-  const utterance = utterances[utterances.length - 1];
-  return new Promise((resolve, reject) => {
-    spawn('python3', ['scripts/turn_taking.py', utterance.text])
-      .stdout.on('data', resolve);
-  }).then(data => {
-    return data === "True" ? SHORT_WAIT : LONG_WAIT;
-  });
+const getWaitingTime = async function(utterances) {
+  return 0;
 };
 
 const getThoth = platformUser => {
