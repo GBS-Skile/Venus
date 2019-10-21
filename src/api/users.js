@@ -29,7 +29,6 @@ export default ({ config, db }) => {
   });
   
   users.post('/:user/token', ({ user, body: { password } }, res) => {
-    console.log(user.username, password)
     User.auth(user.username, password).then(success => {
       if (success) {
         if (!process.env.JWT_SECRET) {

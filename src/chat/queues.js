@@ -20,6 +20,13 @@ const getThoth = platformUser => {
 }
 
 
+const setContext = (model, context) => {
+  model.context = Object.assign(model.context, context || {});
+  model.markModified('context');
+  model.save();
+}
+
+
 class MessageQueue {
   constructor(platformUser) {
     this.platformUser = platformUser;
@@ -69,7 +76,10 @@ class MessageQueue {
     const queue = this;
     const { pending, platformUser } = this;
     const sessionId = platformUser.socialId;
-    const context = utterance.dialogue.context;
+    const context = {
+      User: platformUser.user.context,
+      Dialog: utterance.dialogue.context,
+    };
     
     pending.push(utterance);
     return getWaitingTime(pending).then(waitingTime =>
@@ -86,11 +96,8 @@ class MessageQueue {
       return null;
     }).then(response => {
       if (response) {
-        utterance.dialogue.context = Object.assign(
-          context, response.context
-        );
-        utterance.dialogue.markModified('context');
-        utterance.dialogue.save();
+        setContext(utterance.dialogue, response.context.Dialog);
+        setContext(platformUser.user, response.context.User);
         return response;
       } else {
         return {}

@@ -16,7 +16,9 @@ export class PlatformAdapter {
   }
 
   async request(userId, action, payload = {}) {
-    const platformUser = await PlatformUser.findOrCreate(this.platformName, userId);
+    const platformUser = await PlatformUser.findOrCreate(this.platformName, userId).then(
+      pu => pu.populate('user').execPopulate()
+    );
 
     switch(action) {
       case ActionEnum.SEND_TEXT:

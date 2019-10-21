@@ -4,18 +4,23 @@ import User from './user';
 import config from '../config';
 
 const platformUserSchema = new Schema({
-  user: Schema.Types.ObjectId,
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+  },
   platform: String,
   socialId: String,
   context: Schema.Types.Mixed,
 });
 
-platformUserSchema.statics.findOrCreate = function (platform, socialId) {
-  return this.findOneAndUpdate(
-    { platform, socialId },
-    { },
-    { upsert: true, new: true }
-  );
+platformUserSchema.statics.findOrCreate = async function (platform, socialId) {
+  const platformUser = await this.findOne({ platform, socialId })
+  if (platformUser) return platformUser;
+
+  const user = await User.create({ });
+  return this.create({
+    user: user._id, platform, socialId,
+  });
 }
 
 platformUserSchema.statics.registerNative = function (username, password) {

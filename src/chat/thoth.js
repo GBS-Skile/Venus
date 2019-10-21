@@ -44,8 +44,11 @@ export async function fakeThoth(sessionId, utterances, context) {
     msg: msg.split('\n'),
     quick_replies: quickReplies,
     context: {
-      state,
-      ...context,
+      Dialog: {
+        ...context.Dialog,
+        state,
+      },
+      User: context.User,
     }
   });
 
@@ -53,8 +56,9 @@ export async function fakeThoth(sessionId, utterances, context) {
     return response('대화 상태를 초기화합니다.', 'Default');
   }
 
-  switch(context.state) {
+  switch(context.Dialog.state) {
     case 'Default':
+    case '최초':
       return response(
         '안녕하세요! 전 터리예요.\n사용자님의 이름은 무엇인가요?',
         'AskName', ['김철수']
@@ -62,13 +66,13 @@ export async function fakeThoth(sessionId, utterances, context) {
     case 'AskName':
       return response(
         `${msg}님 맞으신가요?`,
-        'AskNameConfirm', ['응', '아니'], {'#name': msg}
+        'AskNameConfirm', ['응', '아니'], {'User': {'#name': msg} }
       );
     case 'AskNameConfirm':
       switch(msg) {
         case '응':
           return response(
-            `그렇군요.\n반가워요, ${context['#name']}님!\n요즘은 잘 지내세요?`,
+            `그렇군요.\n반가워요, ${context.User['#name']}님!\n요즘은 잘 지내세요?`,
             'End', ['잘 못 지내']
           );
         case '아니':
@@ -78,7 +82,7 @@ export async function fakeThoth(sessionId, utterances, context) {
           );
         default:
           return response(
-            `죄송하지만 말씀을 이해하지 못했어요.\n${context['#name']}님 맞으신가요?`,
+            `죄송하지만 말씀을 이해하지 못했어요.\n${context.User['#name']}님 맞으신가요?`,
             'AskNameConfirm', ['응', '아니']
           );
       }

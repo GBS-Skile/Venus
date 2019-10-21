@@ -23,7 +23,7 @@ export default ({ config, db }) => {
     }
 
     res.status(200).json(
-      await adapter.request(user.username, ActionEnum.SEND_TEXT, { text: utterance, })
+      await adapter.request(user.user, ActionEnum.SEND_TEXT, { text: utterance, })
     );
   });
 
