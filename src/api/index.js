@@ -1,17 +1,42 @@
 import { version } from '../../package.json';
 import { Router } from 'express';
+import jwtMiddleware from 'express-jwt';
+
 import users from './users';
 
-export default ({ config, db }) => {
-	let api = Router();
+import { ActionEnum, PlatformAdapter } from '../chat';
+import config from '../config';
 
-	// mount the facets resource
-	api.use('/users', users({ config, db }));
+const adapter = new PlatformAdapter(config.nativePlatform);
+
+if (!process.env.JWT_SECRET) throw new Error("The environment variable JWT_SECRET is undefined!");
+const auth = jwtMiddleware({ secret: process.env.JWT_SECRET, });
+
+export default ({ config, db }) => {
+  let api = Router();
+  
+  api.use('/users', users({ config, db }));
+  
+  api.post('/chat', auth, async ({ user, body: { utterance } }, res) => {
+    if (!utterance) {
+      return res.status(400).json({ error: '`utterance` is required field.' });
+    }
+
+    res.status(200).json(
+      await adapter.request(user.username, ActionEnum.SEND_TEXT, { text: utterance, })
+    );
+  });
+
+  api.use((err, req, res, next) => {
+    if (err.name === 'UnauthorizedError') {
+      res.status(401).json({ error: err.message });
+    } else next();
+  }); 
 
 	// perhaps expose some API metadata at the root
 	api.get('/', (req, res) => {
 		res.json({ version });
-	});
+  });
 
 	return api;
 }

@@ -4,5 +4,6 @@ dotenv.config();  // assign process.env from .env file
 export default {
 	"port": 8080,
 	"bodyLimit": "100kb",
-	"corsHeaders": ["Link"]
+	"corsHeaders": ["Link"],
+	"nativePlatform": "storyforest",
 };
