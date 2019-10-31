@@ -23,8 +23,8 @@ platformUserSchema.statics.findOrCreate = async function (platform, socialId) {
   });
 }
 
-platformUserSchema.statics.registerNative = function (username, password) {
-  return User.register(username, password).then(
+platformUserSchema.statics.registerNative = function (username, password, context) {
+  return User.register(username, password, context).then(
     user => this.create({
       user: user._id,
       platform: config.nativePlatform,

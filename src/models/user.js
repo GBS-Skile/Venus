@@ -19,12 +19,13 @@ if (!process.env.SALT) {
 const hash = (username, password) => crypto.createHash('sha256')
   .update(username + process.env.SALT + password).digest('base64');
 
-userSchema.statics.register = async function (username, password) {
+userSchema.statics.register = async function (username, password, context) {
   if (!username || !password) throw new Error("Fields required: username and password");
   if (await this.findOne({ username, })) throw new Error(`Username ${username} already exists.`);
   return this.create({
     username,
     password: hash(username, password),
+    context,
   });
 };
 

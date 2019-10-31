@@ -14,8 +14,8 @@ export default ({ config, db }) => {
     next();
   });
 
-  users.post('/', ({ body: { username, password } }, res) => {
-    PlatformUser.registerNative(username, password).then(
+  users.post('/', ({ body: { username, password, context = {} } }, res) => {
+    PlatformUser.registerNative(username, password, context).then(
       () => res.sendStatus(204)
     ).catch(
       err => {

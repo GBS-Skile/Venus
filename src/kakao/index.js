@@ -40,7 +40,7 @@ export default () => {
       const body = simpleText(text.join('\n'));
 
       const MAX_TYPING_TIME = 4000;
-      const TIME_PER_CHAR = 150;
+      const TIME_PER_CHAR = 0;
       const sleepTime = Math.min(TIME_PER_CHAR * text.join('\n').length, MAX_TYPING_TIME);
       await sleep(sleepTime);
 

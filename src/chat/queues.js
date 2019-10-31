@@ -12,7 +12,7 @@ const getWaitingTime = async function(utterances) {
 };
 
 const getThoth = platformUser => {
-  if (platformUser.platform === 'beatrice') {
+  if (['beatrice', 'facebook'].includes(platformUser.platform)) {
     return sendToThoth;
   } else {
     return fakeThoth || sendToDialogflow;
