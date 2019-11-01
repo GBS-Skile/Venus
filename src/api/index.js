@@ -4,10 +4,10 @@ import jwtMiddleware from 'express-jwt';
 
 import users from './users';
 
-import { ActionEnum, PlatformAdapter } from '../chat';
-import config from '../config';
+import { ActionEnum } from '../chat';
+import { StoryForest } from './adapters.js';
 
-const adapter = new PlatformAdapter(config.nativePlatform);
+const adapter = new StoryForest();
 
 if (!process.env.JWT_SECRET) throw new Error("The environment variable JWT_SECRET is undefined!");
 const auth = jwtMiddleware({ secret: process.env.JWT_SECRET, });
@@ -17,13 +17,13 @@ export default ({ config, db }) => {
   
   api.use('/users', users({ config, db }));
   
-  api.post('/chat', auth, async ({ user, body: { utterance } }, res) => {
+  api.post('/chat', auth, async ({ user, body: { utterance, tag = null } }, res) => {
     if (!utterance) {
       return res.status(400).json({ error: '`utterance` is required field.' });
     }
 
     res.status(200).json(
-      await adapter.request(user.user, ActionEnum.SEND_TEXT, { text: utterance, })
+      await adapter.request(user.user, ActionEnum.SEND_TEXT, { text: utterance, tag })
     );
   });
 

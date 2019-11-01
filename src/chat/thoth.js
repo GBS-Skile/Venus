@@ -18,20 +18,6 @@ export const sendToDialogflow = (sessionId, utterances, context) => {
   );
 }
 
-export const sendToThoth = (sessionId, utterances, context) => {
-  const requestBody = {
-    sess_id: sessionId,
-    msg: utterances.map(u => u.text).join(' '),
-    context,
-  };
-
-  return fetch(process.env.THOTH_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(requestBody),
-  }).then(res => res.json());
-}
-
 if (!String.prototype.trim) {
   String.prototype.trim = function () {
     return this.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '');

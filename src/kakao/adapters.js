@@ -6,11 +6,13 @@ export class Turi extends PlatformAdapter {
     super("Turi");
   }
 
-  dialogueConfig = () => ({
-    initialState: 'Default',
-    scenario: 'fakeThoth',
-    timeout: Infinity,
-  })
+  dialogueConfig() {
+    return ({
+      initialState: 'Default',
+      scenario: 'fakeThoth',
+      timeout: Infinity,
+    });
+  }
 };
 
 export class Beatrice extends PlatformAdapter {

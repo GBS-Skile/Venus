@@ -15,13 +15,15 @@ export class PlatformAdapter {
     this.platformName = platformName;
   }
 
-  dialogueConfig = async (_, platformUser) => ({
-    initialState: await Dialogue.countDocuments(
-      { platformUser: platformUser._id }
-    ) < 1 ? '최초' : 'Default',
-    scenario: 'beatrice',
-    timeout: 3 * 60 * 60 * 1000,
-  })
+  async dialogueConfig(_, platformUser) {
+    return {
+      initialState: await Dialogue.countDocuments(
+        { platformUser: platformUser._id }
+      ) < 1 ? '최초' : 'Default',
+      scenario: 'beatrice',
+      timeout: 3 * 60 * 60 * 1000,
+    }
+  };
 
   async getDialogue(platformUser, { tag = null }) {
     const { initialState, scenario, timeout } = await this.dialogueConfig(tag, platformUser);
