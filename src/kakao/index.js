@@ -1,16 +1,11 @@
 import { Router } from 'express';
 
-import { ActionEnum, PlatformAdapter } from '../chat';
+import { ActionEnum } from '../chat';
+import { Turi, Beatrice } from './adapters';
 
-const adapterMap = new Map();
-
-const getAdapter = name => {
-  let adapter = adapterMap.get(name);
-  if (adapter) return adapter;
-
-  adapter = new PlatformAdapter(name);
-  adapterMap.set(name, adapter);
-  return adapter;
+const getAdapter = {
+  "걱정털이": new Turi(),
+  "beatrice": new Beatrice(),
 }
 
 const simpleText = text => ({
@@ -31,7 +26,7 @@ export default () => {
     let utterance = req.body.userRequest.utterance;
     let senderId = req.body.userRequest.user.id;
 
-    const response = await getAdapter(req.body.bot.name).request(
+    const response = await getAdapter[req.body.bot.name].request(
       senderId, ActionEnum.SEND_TEXT, { text: utterance }
     );
 

@@ -1,5 +1,5 @@
-import MessageQueueMap from './queues';
-import { PlatformUser, Utterance } from '../models';
+import { PlatformUser, Dialogue, Utterance } from '../models';
+import Scenario from './scenario';
 
 export const ActionEnum = {
   WELCOME: 0,
@@ -15,6 +15,41 @@ export class PlatformAdapter {
     this.platformName = platformName;
   }
 
+  dialogueConfig = async (_, platformUser) => ({
+    initialState: await Dialogue.countDocuments(
+      { platformUser: platformUser._id }
+    ) < 1 ? '최초' : 'Default',
+    scenario: 'beatrice',
+    timeout: 3 * 60 * 60 * 1000,
+  })
+
+  async getDialogue(platformUser, { tag = null }) {
+    const { initialState, scenario, timeout } = await this.dialogueConfig(tag, platformUser);
+
+    return await Dialogue.findOneAndUpdate(
+      {
+        platformUser: platformUser._id,
+        active: true,
+        tag,
+        hitAt: {
+          $gte: new Date(Math.max(Date.now() - timeout, 0)),
+        }
+      },
+      {
+        $setOnInsert: {
+          context: { state: initialState },
+          scenario,
+        }
+      },
+      {
+        new: true,
+        upsert: true,
+        setDefaultsOnInsert: true,
+        sort: { hitAt: -1 }
+      }
+    );
+  }
+
   async request(userId, action, payload = {}) {
     const platformUser = await PlatformUser.findOrCreate(this.platformName, userId).then(
       pu => pu.populate('user').execPopulate()
@@ -22,7 +57,15 @@ export class PlatformAdapter {
 
     switch(action) {
       case ActionEnum.SEND_TEXT:
-        const response = await onUtter(platformUser, payload.text);
+        const dialogue = await this.getDialogue(platformUser, payload);
+        
+        await Utterance.create({
+          dialogue: dialogue._id,
+          isSpeakerBot: false,
+          text: payload.text,
+        });
+
+        const response = await Scenario(dialogue, payload.text);
         return response.msg ?
           {
             display: {
@@ -36,24 +79,3 @@ export class PlatformAdapter {
     return [];
   }
 };
-
-/**
- * Utterance 객체를 생성하고 Queue 모듈에 보내 그 반응을 처리합니다.
- * @param {PlatformUser} platformUser 
- * @param {string} text 
- * @return EventEmitter를 인자로 보내는 Promise
- */
-export function onUtter(platformUser, text) {
-  const session = MessageQueueMap.get(platformUser);
-  return session.getDialogue().then(
-    dialogue => Utterance.create({
-      dialogue: dialogue._id,
-      isSpeakerBot: false,
-      text: text,
-    })
-  ).then(
-    utterance => utterance.populate('dialogue').execPopulate()
-  ).then(
-    utterance => session.push(utterance)
-  );
-}

@@ -1,11 +1,16 @@
 import { model, Schema, Types } from 'mongoose';
 
 const dialogueSchema = new Schema({
-  platformUser: Schema.Types.ObjectId,
+  platformUser: {
+    type: Schema.Types.ObjectId,
+    ref: 'PlatformUser',
+  },
   active: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now },
   hitAt: { type: Date, default: Date.now },
   context: { type: Schema.Types.Mixed },
+  scenario: String,
+  tag: String,
   finishedAt: Date,
   finishReason: String,
 });
