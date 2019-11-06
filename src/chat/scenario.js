@@ -11,22 +11,28 @@
 import fetch from 'node-fetch';
 import { fakeThoth } from './thoth';
 
-const scenarios = {
-  fakeThoth: (context, message) =>
-    fakeThoth(0, [{ text: message }], context),
-  beatrice: (context, message) => {
-    const requestBody = {
-      sess_id: 0,  // unused variable
-      msg: message,
-      context,
-    };
-  
-    return fetch(process.env.THOTH_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody),
-    }).then(res => res.json());
-  },
+const thothApi = url => (context, message) => {
+  const requestBody = {
+    sess_id: 0,  // unused variable
+    msg: message,
+    context,
+  };
+
+  return fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestBody),
+  }).then(res => res.json());
+};
+
+export const scenarios = {
+  fakeThoth: (context, message) => fakeThoth(0, [{ text: message }], context),
+  beatrice: thothApi('http://172.31.35.214:5000/'),
+  tree_0: (context, message) => fakeThoth(0, [{ text: message }], context),
+  tree_1: (context, message) => fakeThoth(0, [{ text: message }], context),
+  tree_2: (context, message) => fakeThoth(0, [{ text: message }], context),
+  tree_3: thothApi('http://172.31.35.214:5001/'),
+  tree_4: (context, message) => fakeThoth(0, [{ text: message }], context),
 };
 
 export default async (dialogue, message) => {

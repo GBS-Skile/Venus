@@ -28,9 +28,16 @@ export default ({ config, db }) => {
   });
 
   api.use((err, req, res, next) => {
-    if (err.name === 'UnauthorizedError') {
-      res.status(401).json({ error: err.message });
-    } else next();
+    switch (err.name) {
+      case 'UnauthorizedError':
+        res.status(401).json({ error: err.message });
+        break;
+      case 'ScenarioNotExist':
+        res.status(400).json({ error: err.message });
+        break;
+      default:
+        next();
+    }
   }); 
 
 	// perhaps expose some API metadata at the root
