@@ -60,5 +60,7 @@ export default async (dialogue, message) => {
 
   setContext(dialogue.platformUser.user, User);
   setContext(dialogue, Dialog);
-  return response;
+
+  const { msg, platform } = response;
+  return { msg: msg || '', platform: platform || {} };
 };

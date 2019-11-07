@@ -26,12 +26,12 @@ export default () => {
     let utterance = req.body.userRequest.utterance;
     let senderId = req.body.userRequest.user.id;
 
-    const response = await getAdapter[req.body.bot.name].request(
+    const { msg, platform } = await getAdapter[req.body.bot.name].request(
       senderId, ActionEnum.SEND_TEXT, { text: utterance }
     );
 
-    if (response.display) {
-      const { text, quickReplies } = response.display;
+    if (msg) {
+      const text = msg, quickReplies = platform.quick_replies;
       const body = simpleText(text.join('\n'));
 
       const MAX_TYPING_TIME = 4000;

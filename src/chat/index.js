@@ -67,15 +67,7 @@ export class PlatformAdapter {
           text: payload.text,
         });
 
-        const response = await Scenario(dialogue, payload.text);
-        return response.msg ?
-          {
-            display: {
-              text: response.msg,
-              quickReplies: response.quick_replies || [],
-            }
-          } :
-          {};
+        return await Scenario(dialogue, payload.text);
     }
 
     return [];

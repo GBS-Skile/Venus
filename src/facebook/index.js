@@ -43,7 +43,7 @@ const handleMessage = async function (senderId, msg) {
     );
     
     if (response.display) {
-      const { text, quickReplies } = response.display;
+      const text = response.msg, quickReplies = response.platform.quick_replies;
       const messages = text.map(text => ({ text, }));
       
       if (quickReplies && quickReplies.length) {

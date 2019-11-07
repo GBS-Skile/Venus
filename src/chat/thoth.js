@@ -28,7 +28,9 @@ export async function fakeThoth(sessionId, utterances, context) {
   const msg = utterances.map(u => u.text).join(' ').trim();
   const response = (msg, state, quickReplies = [], context = {}) => ({
     msg: msg.split('\n'),
-    quick_replies: quickReplies,
+    platform: {
+      quick_replies: quickReplies,
+    },
     context: {
       Dialog: {
         ...context.Dialog,
