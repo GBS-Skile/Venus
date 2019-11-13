@@ -21,7 +21,7 @@ const hash = (username, password) => crypto.createHash('sha256')
 
 userSchema.statics.register = async function (username, password, context) {
   if (!username || !password) throw new Error("Fields required: username and password");
-  if (await this.findOne({ username, })) throw new Error(`Username ${username} already exists.`);
+  if (await this.findOne({ username, })) throw new Error(`${username} 사용자명으로 가입된 계정이 이미 있습니다.`);
   return this.create({
     username,
     password: hash(username, password),

@@ -22,7 +22,7 @@ export default ({ config, db }) => {
         if (err.name === 'MongoError' && err.code === 11000) {
           res.status(409).json({ error: err.errmsg });
         } else {
-          res.status(400).json({ error: err._message || err.name });
+          res.status(400).json({ error: err.message || err._message || err.name });
         }
       }
     );
