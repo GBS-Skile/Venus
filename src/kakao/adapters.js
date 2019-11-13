@@ -10,7 +10,7 @@ export class Turi extends PlatformAdapter {
     return ({
       initialState: 'Default',
       scenario: 'fakeThoth',
-      timeout: Infinity,
+      timeout: 60 * 60 * 1000,
     });
   }
 };

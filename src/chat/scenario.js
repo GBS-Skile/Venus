@@ -26,13 +26,14 @@ const thothApi = url => (context, message) => {
 };
 
 export const scenarios = {
-  fakeThoth: (context, message) => fakeThoth(0, [{ text: message }], context),
+  //fakeThoth: (context, message) => fakeThoth(0, [{ text: message }], context),
+  fakeThoth: thothApi('http://127.0.0.1:1016/'),
   beatrice: thothApi('http://172.31.35.214:5000/'),
-  tree_0: (context, message) => fakeThoth(0, [{ text: message }], context),
-  tree_1: (context, message) => fakeThoth(0, [{ text: message }], context),
-  tree_2: (context, message) => fakeThoth(0, [{ text: message }], context),
-  tree_3: thothApi('http://172.31.35.214:5001/'),
-  tree_4: (context, message) => fakeThoth(0, [{ text: message }], context),
+  tree_0: thothApi('http://127.0.0.1:5000/'),
+  tree_1: thothApi('http://127.0.0.1:5001/'),
+  tree_2: thothApi('http://127.0.0.1:5002/'),
+  tree_3: thothApi('http://127.0.0.1:5003/'),
+  tree_4: thothApi('http://127.0.0.1:5004/'),
 };
 
 export default async (dialogue, message) => {
@@ -49,7 +50,9 @@ export default async (dialogue, message) => {
     User: dialogue.platformUser.user.context,
   };
 
+  console.log(dialogue, context);
   const { context: newContext, ...response } = await scenario(context, message);
+  console.log(response, newContext);
   const { User, Dialog } = newContext;
 
   const setContext = (model, context) => {
