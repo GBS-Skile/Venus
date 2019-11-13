@@ -65,5 +65,5 @@ export default async (dialogue, message) => {
   setContext(dialogue, Dialog);
 
   const { msg, platform } = response;
-  return { msg: msg || '', platform: platform || {} };
+  return { msg: msg.filter(x => x) || [], platform: platform || {} };
 };
