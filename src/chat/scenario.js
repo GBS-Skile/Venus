@@ -9,7 +9,6 @@
  */
 
 import fetch from 'node-fetch';
-import { fakeThoth } from './thoth';
 
 const thothApi = url => (context, message) => {
   const requestBody = {
@@ -22,7 +21,12 @@ const thothApi = url => (context, message) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(requestBody),
-  }).then(res => res.json());
+  }).then(res => res.text()).then(
+    text => {
+      console.log(text);
+      return JSON.parse(text);
+    }
+  )
 };
 
 export const scenarios = {
@@ -36,7 +40,7 @@ export const scenarios = {
   tree_4: thothApi('http://127.0.0.1:5004/'),
 };
 
-export default async (dialogue, message) => {
+export default async (dialogue, message, dialogContext = {}) => {
   await dialogue.populate({
     path: 'platformUser',
     populate: { path: 'user' },
@@ -46,11 +50,13 @@ export default async (dialogue, message) => {
   if (!scenario) throw new Error(`Scenario ${scenario} not exists in this server.`);
 
   const context = {
-    Dialog: dialogue.context,
+    Dialog: {
+      ...dialogue.context,
+      ...dialogContext,
+    },
     User: dialogue.platformUser.user.context,
   };
 
-  console.log(dialogue, context);
   const { context: newContext, ...response } = await scenario(context, message);
   console.log(response, newContext);
   const { User, Dialog } = newContext;

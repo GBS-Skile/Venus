@@ -27,6 +27,12 @@ export default ({ config, db }) => {
     );
   });
 
+  api.post('/silent', auth, async ({ user }, res) => {
+    res.status(200).json(
+      await adapter.request(user.user, ActionEnum.SILENT)
+    );
+  });
+
   api.use((err, req, res, next) => {
     switch (err.name) {
       case 'UnauthorizedError':

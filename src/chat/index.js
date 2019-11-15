@@ -2,12 +2,13 @@ import { PlatformUser, Dialogue, Utterance } from '../models';
 import Scenario from './scenario';
 
 export const ActionEnum = {
-  WELCOME: 0,
+  // WELCOME: 0,
   SEND_TEXT: 1,
-  SEND_IMAGE: 2,
-  READ: 3,
-  START_TYPING: 4,
-  STOP_TYPING: 5,
+  // SEND_IMAGE: 2,
+  // READ: 3,
+  // START_TYPING: 4,
+  // STOP_TYPING: 5,
+  SILENT: 6,
 };
 
 export class PlatformAdapter {
@@ -57,17 +58,18 @@ export class PlatformAdapter {
       pu => pu.populate('user').execPopulate()
     );
 
+    const dialogue = await this.getDialogue(platformUser, payload);
     switch(action) {
       case ActionEnum.SEND_TEXT:
-        const dialogue = await this.getDialogue(platformUser, payload);
-        
         await Utterance.create({
           dialogue: dialogue._id,
           isSpeakerBot: false,
           text: payload.text,
         });
 
-        return await Scenario(dialogue, payload.text);
+        return await Scenario(dialogue, payload.text, { force_reply: false });
+      case ActionEnum.SILENT:
+        return await Scenario(dialogue, '', { force_reply: true });
     }
 
     return [];
