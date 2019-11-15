@@ -2,7 +2,7 @@ import { PlatformUser, Dialogue, Utterance } from '../models';
 import Scenario from './scenario';
 
 export const ActionEnum = {
-  // WELCOME: 0,
+  WELCOME: 0,
   SEND_TEXT: 1,
   // SEND_IMAGE: 2,
   // READ: 3,
@@ -29,7 +29,7 @@ export class PlatformAdapter {
   async getDialogue(platformUser, { tag = null }) {
     const { initialState, scenario, timeout } = await this.dialogueConfig(tag, platformUser);
 
-    return await Dialogue.findOneAndUpdate(
+    const rawResult = await Dialogue.findOneAndUpdate(
       {
         platformUser: platformUser._id,
         active: true,
@@ -48,9 +48,16 @@ export class PlatformAdapter {
         new: true,
         upsert: true,
         setDefaultsOnInsert: true,
-        sort: { hitAt: -1 }
+        sort: { hitAt: -1 },
+        rawResult: true,
       }
     );
+
+    const { value, lastErrorObject } = rawResult;
+    return {
+      dialogue: value,
+      insert: !lastErrorObject.updatedExisting,
+    };
   }
 
   async request(userId, action, payload = {}) {
@@ -58,7 +65,7 @@ export class PlatformAdapter {
       pu => pu.populate('user').execPopulate()
     );
 
-    const dialogue = await this.getDialogue(platformUser, payload);
+    const { dialogue, insert } = await this.getDialogue(platformUser, payload);
     switch(action) {
       case ActionEnum.SEND_TEXT:
         await Utterance.create({
@@ -68,6 +75,11 @@ export class PlatformAdapter {
         });
 
         return await Scenario(dialogue, payload.text, { force_reply: false });
+      case ActionEnum.WELCOME:
+        if (!insert) return null;
+
+        const WELCOME_MESSAGE = '안녕하세요';
+        return await Scenario(dialogue, WELCOME_MESSAGE);
       case ActionEnum.SILENT:
         return await Scenario(dialogue, '', { force_reply: true });
     }

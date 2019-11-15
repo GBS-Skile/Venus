@@ -33,6 +33,16 @@ export default ({ config, db }) => {
     );
   });
 
+  api.post('/welcome', auth, async ({ user, body: { tag = null } }, res) => {
+    const response = await adapter.request(user.user, ActionEnum.WELCOME, { tag });
+    if (response === null) {
+      res.sendStatus(409);
+      return;
+    }
+
+    res.status(200).json(response);
+  });
+
   api.use((err, req, res, next) => {
     switch (err.name) {
       case 'UnauthorizedError':
