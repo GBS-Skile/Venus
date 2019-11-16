@@ -11,6 +11,11 @@ export const ActionEnum = {
   SILENT: 6,
 };
 
+const mapPlatform = key => ({
+  'Beatrice': 'kakao',
+  'storyforest': 'native',
+})[key] || 'unknown';
+
 export class PlatformAdapter {
   constructor(platformName) {
     this.platformName = platformName;
@@ -66,6 +71,8 @@ export class PlatformAdapter {
     );
 
     const { dialogue, insert } = await this.getDialogue(platformUser, payload);
+    const platform = mapPlatform(platformUser.platform);
+
     switch(action) {
       case ActionEnum.SEND_TEXT:
         await Utterance.create({
@@ -74,14 +81,14 @@ export class PlatformAdapter {
           text: payload.text,
         });
 
-        return await Scenario(dialogue, payload.text, { force_reply: false });
+        return await Scenario(dialogue, payload.text, { force_reply: false, platform, });
       case ActionEnum.WELCOME:
         if (!insert) return null;
 
         const WELCOME_MESSAGE = '안녕하세요';
-        return await Scenario(dialogue, WELCOME_MESSAGE);
+        return await Scenario(dialogue, WELCOME_MESSAGE, { platform, });
       case ActionEnum.SILENT:
-        return await Scenario(dialogue, '', { force_reply: true });
+        return await Scenario(dialogue, '', { force_reply: true, platform, });
     }
 
     return [];
