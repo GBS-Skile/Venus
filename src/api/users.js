@@ -38,7 +38,7 @@ export default ({ config, db }) => {
         const token = jwt.sign(
           { user: user.username },
           process.env.JWT_SECRET,
-          { expiresIn: '3h' }
+          { expiresIn: '24h' }
         );
         res.status(201).send(token);
       } else res.status(403).json({ error: 'Authorization failed' });
